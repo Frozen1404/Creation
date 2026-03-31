@@ -1,0 +1,43 @@
+local RunService = game:GetService("RunService")
+
+local Character = script.Parent
+local Camera = workspace.CurrentCamera
+local Humanoid: Humanoid = Character:WaitForChild("Humanoid", math.huge)
+Humanoid = Character:FindFirstChildOfClass("Humanoid")
+
+local DeltaTimeOffset = 1 / 60 
+local BobbingOffset = CFrame.new()
+
+-- 60 fps calculated to DeltaTime
+
+-- for example, 1 divided by 10 is 10% of 10 (0.1)
+-- then, DeltaTime divided by DeltaTimeOffset is the offset
+-- 60 fps would get 1, 
+-- 120 fps would return 0.5, 
+-- 30 would return 2
+-- this is to make the camera bobbing compatible for all fps
+
+RunService.RenderStepped:Connect(function(DeltaTime)
+	local Offset = DeltaTime / DeltaTimeOffset
+	local IsMoving = Humanoid.MoveDirection.Magnitude > 0.01
+	local CurrentCameraPosition = Camera.CFrame * BobbingOffset:Inverse()
+	-- for example: CFrame - BobbingOffset
+	
+	local ZDirection = -math.round(Humanoid.MoveDirection:Dot(Camera.CFrame.RightVector))
+	BobbingOffset = BobbingOffset:Lerp(
+		CFrame.Angles(
+			IsMoving and 
+				math.rad(math.sin(time() * 20)) / 3.5 * Offset or
+				math.rad(math.sin(time())) / 100 * Offset,
+			
+			IsMoving and 
+				math.rad(math.sin(time() * 10)) / 3 * Offset or 
+				math.rad(math.cos(time())) / 100 * Offset,
+			
+			math.rad(ZDirection * 2) * Offset
+		),
+		0.3
+	)
+	
+	Camera.CFrame = Camera.CFrame * BobbingOffset
+end)
