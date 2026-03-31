@@ -1,0 +1,25 @@
+local part = -- put the part u need
+local Info = TweenInfo.new(0.5)
+local TS = game:GetService("TweenService")
+local Sound = script.Parent.SoundSensor.Screamer
+local Sensor = script.Parent.Part
+
+local Openstate1 = {}
+Openstate1.CFrame = photo.CFrame + Vector3.new(0,0,-3) -- change to what you want
+
+local Tween = TS:Create(part, Info, Openstate1)
+
+local function onPartTouched(otherPart)
+	-- Check if the other part has a Player character
+	local player = game.Players:GetPlayerFromCharacter(otherPart.Parent)
+
+	if player then
+		Sound:Play()
+		Tween:Play()
+		wait()
+		Sensor:Destroy()
+		
+	end
+end
+
+Sensor.Touched:Connect(onPartTouched)
