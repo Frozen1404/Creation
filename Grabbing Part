@@ -1,0 +1,78 @@
+-- just need to put "Grab" as a HasTag in your Part
+local Plrs = game:GetService("Players")
+local UserInPutService = game:GetService("UserInputService")
+local RS = game:GetService("ReplicatedStorage")
+local RunService =  game:GetService("RunService")
+local Plr = Plrs.LocalPlayer
+local Max_Dist = 30
+local target = nil
+local Grabbed = nil
+local DragTargetAttachment = workspace.Terrain.DragTarget
+
+local DragRequest = RS:WaitForChild("DragRequest")
+
+local function HighlightPart(Object)
+	script.Highlight.Adornee = Object
+end
+local function DropObject()
+	if not Grabbed then return end
+	DragRequest:InvokeServer(target,true)
+	Grabbed = nil
+	script.AlignPosition.Attachment0 = nil
+	script.AlignOrientation.Attachment0 = nil	
+end
+
+UserInPutService.InputBegan:Connect(function(input,Prosseced)
+	if input.UserInputType.EnumType ~= Enum.UserInputType.MouseButton1 then return end
+	
+	if target and not Grabbed then
+		print("grabbed")
+		Grabbed = target
+	else
+		DropObject()
+	end
+end)
+
+UserInPutService.InputEnded:Connect(function(input,Prosseced)
+	if Prosseced then return end
+	if input.UserInputType.EnumType ~= Enum.UserInputType.MouseButton1 then return end
+	DropObject()
+end)
+
+
+RunService.Heartbeat:Connect(function()
+	--local targetCF = workspace.CurrentCamera.CFrame * CFrame.new(0,0,-7.5)
+	--DragTargetAttachment.WorldCFrame = targetCF
+
+	
+	if Grabbed then
+
+		print(0)
+		local dragAttachement = Grabbed:FindFirstChild("DragAttachement")
+		if not dragAttachement then
+			dragAttachement = Instance.new("Attachment")
+			dragAttachement.Name = "DragAttachement"
+			dragAttachement.Parent = Grabbed
+		end
+		
+		script.AlignPosition.Attachment0 = dragAttachement
+		script.AlignOrientation.Attachment0 = dragAttachement
+		
+		
+		
+		HighlightPart(Grabbed)
+	else
+		local MousePos = UserInPutService:GetMouseLocation()
+		local ray = workspace.CurrentCamera:ViewportPointToRay(MousePos.X,MousePos.Y)
+		local RayCastParams = RaycastParams.new()
+		RayCastParams.FilterType = Enum.RaycastFilterType.Exclude
+		RayCastParams.FilterDescendantsInstances = Plr.Character:GetDescendants()
+		local result = workspace:Raycast(ray.Origin,ray.Direction * Max_Dist, RayCastParams)
+		if result and result.Instance  and result.Instance:HasTag("Grab") then
+			local target = result.Instance
+			HighlightPart(target)
+		else
+			HighlightPart(nil)
+		end
+	end
+end)
